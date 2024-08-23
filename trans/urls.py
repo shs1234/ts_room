@@ -20,8 +20,8 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('room.urls')),
+    path("chat/", include("chat.urls")),
 ]
-
 
 from django.urls import re_path
 from rest_framework import permissions
