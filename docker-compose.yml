@@ -2,6 +2,7 @@ version: '3'
 
 services:
   db:
+    container_name: db_room
     image: postgres
     volumes:
       - ./data/db:/var/lib/postgresql/data
@@ -10,6 +11,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
   web:
+    container_name: web_room
     build: .
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
