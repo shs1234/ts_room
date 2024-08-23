@@ -1,19 +1,19 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: hoseoson <hoseoson@student.42seoul.kr>     +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/04/03 22:35:13 by hoseoson          #+#    #+#              #
-#    Updated: 2024/01/18 20:22:39 by hoseoson         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
+INIT_FILE = .init_done
 
-up : 
+all: migrate up
+
+up:
 	docker-compose up -d
 
-down :
+down:
 	docker-compose down
 
-re : down up
+re: down up
+
+migrate: $(INIT_FILE)
+
+$(INIT_FILE):
+	docker-compose up -d
+	docker exec web_room python3 manage.py makemigrations
+	docker exec web_room python3 manage.py migrate
+	touch $(INIT_FILE)
