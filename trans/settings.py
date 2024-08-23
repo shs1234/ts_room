@@ -32,8 +32,11 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'rest_framework',
     'drf_yasg',
+    'channels',
+    'chat',
     'room',
     'django.contrib.admin',
     'django.contrib.auth',

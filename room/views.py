@@ -69,10 +69,11 @@ def gameStart(request, pk):
     return Response({'message': 'Game has started'}, status=status.HTTP_200_OK)
 
 
+# TODO:
+# 방 중복 참여 어떻게 방지할 것인가? = 유저 데이터에 방 정보 저장?
 
-# TODO 방 중복 참여 어떻게 방지할 것인가? = 유저 데이터에 방 정보 저장?
 
 
-
-# TODO 방 만들때 해당 유저가 방에 참가하도록. player1 = user
-# TODO swagger 사용해보기
+# 방 만들때 해당 유저가 방에 참가하도록. player1 = user
+# swagger 사용해보기
+# """
