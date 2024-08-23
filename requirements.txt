@@ -2,4 +2,3 @@ Django
 djangorestframework
 psycopg2>=2.8
 drf-yasg
-channels[daphne]
