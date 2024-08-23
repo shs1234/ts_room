@@ -1,4 +1,3 @@
-<!-- chat/templates/chat/room.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,41 +9,73 @@
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
     {{ room_name|json_script:"room-name" }}
+
     <script>
+        // 방 이름 가져오기
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
-        const chatSocket = new WebSocket(
-            'ws://'
-            + window.location.host
-            + '/ws/chat/'
-            + roomName
-            + '/'
-        );
-
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (data.message + '\n');
-        };
-
-        chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
-        };
-
-        document.querySelector('#chat-message-input').focus();
-        document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // enter, return
-                document.querySelector('#chat-message-submit').click();
+        // 방 정보를 API를 통해 가져오기
+        async function fetchRoomDetails(roomName) {
+            try {
+                const response = await fetch('/api/room/' + roomName + '/detail/'); // 실제 API 엔드포인트로 교체
+                if (!response.ok) {
+                    throw new Error('Failed to fetch room details');
+                }
+                const roomData = await response.json();
+                return roomData;
+            } catch (error) {
+                console.error('Error fetching room details:', error);
             }
-        };
+        }
 
-        document.querySelector('#chat-message-submit').onclick = function(e) {
-            const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
-            chatSocket.send(JSON.stringify({
-                'message': message
-            }));
-            messageInputDom.value = '';
-        };
+        // WebSocket 연결과 초기 메시지 전송
+        async function setupWebSocket() {
+            const roomData = await fetchRoomDetails(roomName);
+
+            if (roomData) {
+                const chatSocket = new WebSocket(
+                    'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
+                );
+
+                chatSocket.onopen = function(e) {
+                    console.log('WebSocket connection established');
+
+                    // 방 정보와 함께 초기 메시지 전송
+                    chatSocket.send(JSON.stringify({
+                        'type': 'room.join',
+                        'message': JSON.stringify(roomData)
+                    }));
+                };
+
+                chatSocket.onmessage = function(e) {
+                    const data = JSON.parse(e.data);
+                    document.querySelector('#chat-log').value += (data.message + '\n');
+                };
+
+                chatSocket.onclose = function(e) {
+                    console.error('Chat socket closed unexpectedly');
+                };
+
+                document.querySelector('#chat-message-input').focus();
+                document.querySelector('#chat-message-input').onkeyup = function(e) {
+                    if (e.key === 'Enter') {  // Enter 키 눌렀을 때
+                        document.querySelector('#chat-message-submit').click();
+                    }
+                };
+
+                document.querySelector('#chat-message-submit').onclick = function(e) {
+                    const messageInputDom = document.querySelector('#chat-message-input');
+                    const message = messageInputDom.value;
+                    chatSocket.send(JSON.stringify({
+                        'message': message
+                    }));
+                    messageInputDom.value = '';
+                };
+            }
+        }
+
+        // WebSocket 설정
+        setupWebSocket();
     </script>
 </body>
 </html>
