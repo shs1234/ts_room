@@ -7,7 +7,7 @@ class Room(models.Model):
     current_participants = models.IntegerField(default=0)
     ready_participants = models.IntegerField(default=0)
     max_participants = models.IntegerField(choices=[(2, '2 players'), (4, '4 players')])
-    players = models.JSONField(default=list)  # JSON 리스트로 유저 ID나 이름을 저장
+    players = models.JSONField(default=list)
     isPlaying = models.BooleanField(default=False, editable=False)
 
     def __str__(self):
@@ -30,17 +30,17 @@ class Room(models.Model):
             raise ValidationError("User is not in the room.")
 
     def start_game(self):
-        if self.current_participants != self.max_participants:
+        if self.current_participants < self.max_participants:
             raise ValidationError("The room is not full.")
-        if self.ready_participants != self.max_participants:
+        if self.ready_participants < self.max_participants:
             raise ValidationError("The players are not ready.")
         self.isPlaying = True
         self.save()
     
-    def ready_game(self):
+    def get_ready(self):
         if self.isPlaying:
             raise ValidationError("The game has already started.")
-        if self.current_participants is not self.max_participants:
+        if self.current_participants < self.max_participants:
             raise ValidationError("The room is not full.")
         self.ready_participants += 1
         self.save()
@@ -50,3 +50,6 @@ class Room(models.Model):
             raise ValidationError("The game has already started.")
         self.ready_participants = 0
         self.save()
+
+    def user_in_room(self, username):
+        return username in self.players
