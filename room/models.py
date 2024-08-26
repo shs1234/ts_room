@@ -5,6 +5,7 @@ from rest_framework.serializers import ValidationError
 class Room(models.Model):
     title = models.CharField(max_length=20, unique=True)
     current_participants = models.IntegerField(default=0)
+    ready_participants = models.IntegerField(default=0)
     max_participants = models.IntegerField(choices=[(2, '2 players'), (4, '4 players')])
     players = models.JSONField(default=list)  # JSON 리스트로 유저 ID나 이름을 저장
     isPlaying = models.BooleanField(default=False, editable=False)
@@ -14,12 +15,9 @@ class Room(models.Model):
 
     def add_player(self, username):
         if self.current_participants < self.max_participants:
-            if username not in self.players:
-                self.players.append(username)
-                self.current_participants += 1
-                self.save()
-            else:
-                raise ValidationError("User is already in the room.")
+            self.players.append(username)
+            self.current_participants += 1
+            self.save()
         else:
             raise ValidationError("The room is full.")
 
@@ -32,8 +30,23 @@ class Room(models.Model):
             raise ValidationError("User is not in the room.")
 
     def start_game(self):
-        if self.current_participants == self.max_participants:
-            self.isPlaying = True
-            self.save()
-        else:
+        if self.current_participants != self.max_participants:
             raise ValidationError("The room is not full.")
+        if self.ready_participants != self.max_participants:
+            raise ValidationError("The players are not ready.")
+        self.isPlaying = True
+        self.save()
+    
+    def ready_game(self):
+        if self.isPlaying:
+            raise ValidationError("The game has already started.")
+        if self.current_participants is not self.max_participants:
+            raise ValidationError("The room is not full.")
+        self.ready_participants += 1
+        self.save()
+
+    def ready_reset(self):
+        if self.isPlaying:
+            raise ValidationError("The game has already started.")
+        self.ready_participants = 0
+        self.save()

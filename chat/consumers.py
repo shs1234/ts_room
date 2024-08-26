@@ -14,16 +14,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # 데이터베이스에서 방 데이터 가져오기
         room_data = await self.get_room_data(self.room_name)
+        if room_data is None:
+            await self.close()
 
         # 방 그룹에 연결 메시지와 함께 방 데이터 보내기
-        if room_data:
-            await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "chat.message",
-                "message": json.dumps(room_data),
-            },
-            )
+        await self.channel_layer.group_send(
+        self.room_group_name,
+        {
+            "type": "chat.message",
+            "message": json.dumps(room_data),
+        },
+        )
             
         await self.accept()
 
