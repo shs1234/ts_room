@@ -96,12 +96,12 @@ def check_user_in_room(user):
 # TODO:
 
 
+# 게임 레디 상태 추가하기
 # cors 설정
 # env 파일 만들기
 
 
 
-# 게임 레디 상태 추가하기
 # 방 중복 참여 어떻게 방지할 것인가? 모든 방 순회하면서 확인하기로.
 # 방 만들때 해당 유저가 방에 참가하도록. player1 = user
 # swagger 사용해보기
