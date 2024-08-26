@@ -1,5 +1,6 @@
 Django
 djangorestframework
-psycopg2>=2.8
+psycopg2-binary
 drf-yasg
 channels[daphne]
+PyJWT==2.9.0
