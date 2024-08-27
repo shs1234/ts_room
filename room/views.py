@@ -96,6 +96,8 @@ class RoomDelete(generics.DestroyAPIView):
 
 # TODO:
 
+
+# 유저 0명일 때 방 삭제되는 이슈
 # 소켓 DB 역할 나누기
 
 
