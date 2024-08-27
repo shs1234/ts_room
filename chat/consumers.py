@@ -102,7 +102,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = event["message"]
 
         # WebSocket으로 메시지 보내기
-        await await self.send(text_data=json.dumps({"message": message}))
+        await self.send(text_data=json.dumps({"message": message}))
 
 
 

@@ -13,14 +13,20 @@ class RoomList(generics.ListAPIView):
     # current_participants가 0인 방 삭제
     def get(self, request, *args, **kwargs):
         rooms = Room.objects.all()
-        for room in rooms:
-            if room.current_participants == 0:
-                room.delete()
+        # for room in rooms:
+        #     if room.current_participants == 0:
+        #         room.delete()
         return self.list(request, *args, **kwargs)
 
 class RoomCreate(generics.CreateAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomCreateSerializer
+
+    def post(self, request, *args, **kwargs):
+        username = request.user.username
+        if Room.objects.filter(players__contains=[username]).exists():
+            raise ValidationError("Room already exists")
+        return self.create(request, *args, **kwargs)
 
 class RoomDetail(generics.RetrieveAPIView):
     queryset = Room.objects.all()
