@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from rest_framework.serializers import ValidationError
+from rest_framework.exceptions import ValidationError
+
 
 class Room(models.Model):
     title = models.CharField(max_length=20, unique=True)
@@ -14,6 +15,8 @@ class Room(models.Model):
         return self.title
 
     def add_player(self, username):
+        if self.user_in_room(username):
+            raise ValidationError("User is already in the room.")
         if self.current_participants < self.max_participants:
             self.players.append(username)
             self.current_participants += 1
@@ -52,4 +55,4 @@ class Room(models.Model):
         self.save()
 
     def user_in_room(self, username):
-        return username in self.players
+        return Room.objects.filter(players__contains=[username]).exists()
