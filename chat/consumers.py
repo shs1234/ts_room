@@ -24,17 +24,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.action_join(self.room_name, self.scope["user"].username)
 
         # 방 참가 메시지 전송
-        message = {
-            "action": "join",
-            "text": f"{self.scope['user'].username} has joined the room.",
-            "room_data": room_data,
-        }
-        await self.channel_layer.group_send(
-        self.room_group_name,
-        {
-            "type": "chat.message",
-            "message": json.dumps(message),
-        })
+        message = self.create_message("join", f"{self.scope['user'].username} has joined the room.", room_data)
+        await self.channel_layer.group_send(self.room_group_name, {"type": "chat.message", "message": message})
 
         # WebSocket 연결 수락
         await self.accept()
@@ -45,17 +36,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # 방 나가기 메시지 전송
         room_data = await self.get_room_data(self.room_name)
-        message = {
-            "action": "leave",
-            "text": f"{self.scope['user'].username} has left the room.",
-            "room_data": room_data,
-        }
-        await self.channel_layer.group_send(
-        self.room_group_name,
-        {
-            "type": "chat.message",
-            "message": json.dumps(message),
-        })
+        message = self.create_message("leave", f"{self.scope['user'].username} has left the room.", room_data)
+        await self.channel_layer.group_send(self.room_group_name, {"type": "chat.message", "message": message})
 
         # 방 그룹에서 연결 해제
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -67,35 +49,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # 방 그룹에 단순 메시지 보내기
         if action == "message":
-            message = text_data_json["message"]
-            await self.channel_layer.group_send(
-                self.room_group_name, {"type": "chat.message", "message": message}
-            )
+            message = text_data_json["text"]
+            # await self.channel_layer.group_send(self.room_group_name, {"type": "chat.message", "message": message})
 
         # start 버튼 클릭 시
         elif action == "start":
             await self.action_start(self.room_name)
             room_data = await self.get_room_data(self.room_name)
-            text = f"{self.scope['user'].username} has started the game."
-        
+            message = self.create_message(action, f"{self.scope['user'].username} has started the game.", room_data)
+
         # ready 버튼 클릭 시
         elif action == "ready":
             await self.action_ready(self.room_name)
             room_data = await self.get_room_data(self.room_name)
-            text = f"{self.scope['user'].username} is ready."
+            message = self.create_message(action, f"{self.scope['user'].username} is ready.", room_data)
 
-        # 방 그룹에 메시지 보내기
-        message = {
-            "action": action,
-            "text": text,
-            "room_data": room_data,
-        }
-        await self.channel_layer.group_send(
-        self.room_group_name,
-        {
-            "type": "chat.message",
-            "message": json.dumps(message),
-        })
+        await self.channel_layer.group_send(self.room_group_name, {"type": "chat.message", "message": message})
 
     # 방 그룹으로부터 메시지 받기
     async def chat_message(self, event):
@@ -103,15 +72,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # WebSocket으로 메시지 보내기
         await self.send(text_data=json.dumps({"message": message}))
-
-
-
-
-
-
-
-
-
 
     @database_sync_to_async
     def get_room_data(self, room_name):
@@ -125,26 +85,36 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def action_join(self, room_name, username):
         room = Room.objects.get(pk=room_name)
-        room.players.append(username)
-        room.current_participants += 1
-        room.save()
+        room.join(username)
 
     @database_sync_to_async
     def action_leave(self, room_name, username):
         room = Room.objects.get(pk=room_name)
-        room.players.remove(username)
-        room.current_participants -= 1
-        room.ready_reset()
-        room.save()
+        room.leave(username)
 
     @database_sync_to_async
     def action_start(self, room_name):
         room = Room.objects.get(pk=room_name)
-        room.isPlaying = True
-        room.save()
+        room.start()
 
     @database_sync_to_async
     def action_ready(self, room_name):
         room = Room.objects.get(pk=room_name)
-        room.ready_participants += 1
-        room.save()
+        room.ready()
+
+    @database_sync_to_async
+    def action_ready_reset(self, room_name):
+        room = Room.objects.get(pk=room_name)
+        room.ready_reset()
+
+    @database_sync_to_async
+    def action_delete_empty_room(self, room_name):
+        room = Room.objects.get(pk=room_name)
+        room.delete_empty_room()
+
+    def create_message(self, action, text, room_data):
+        return json.dumps({
+            "action": action,
+            "text": text,
+            "room_data": room_data,
+        })

@@ -10,14 +10,6 @@ class RoomList(generics.ListAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 
-    # current_participants가 0인 방 삭제
-    def get(self, request, *args, **kwargs):
-        rooms = Room.objects.all()
-        # for room in rooms:
-        #     if room.current_participants == 0:
-        #         room.delete()
-        return self.list(request, *args, **kwargs)
-
 class RoomCreate(generics.CreateAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomCreateSerializer
@@ -25,7 +17,8 @@ class RoomCreate(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         username = request.user.username
         if Room.objects.filter(players__contains=[username]).exists():
-            raise ValidationError("Room already exists")
+            room = Room.objects.get(players__contains=[username])
+            room.leave(username)
         return self.create(request, *args, **kwargs)
 
 class RoomDetail(generics.RetrieveAPIView):
@@ -36,68 +29,13 @@ class RoomDelete(generics.DestroyAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 
-# @api_view(['PATCH'])
-# def join_room(request, pk):
-#     try:
-#         room = Room.objects.get(pk=pk)
-#     except Room.DoesNotExist:
-#         return Response({'message': 'The room does not exist'}, status=status.HTTP_404_NOT_FOUND)
-#     username = request.user.username
-#     if check_user_in_allroom(username):
-#         return Response({'message': 'User is already in the room'}, status=status.HTTP_400_BAD_REQUEST)
-#     room.add_player(username)
-#     return Response({'message': 'User has joined the room'}, status=status.HTTP_200_OK)
-
-# @api_view(['PATCH'])
-# def leave_room(request, pk):
-#     try:
-#         room = Room.objects.get(pk=pk)
-#     except Room.DoesNotExist:
-#         return Response({'message': 'The room does not exist'}, status=status.HTTP_404_NOT_FOUND)
-#     room.remove_player(request.user.username)
-#     room.ready_reset()
-#     if room.current_participants == 0:
-#         room.delete()
-#     return Response({'message': 'User has left the room'}, status=status.HTTP_200_OK)
-
-
-# @api_view(['PATCH'])
-# def gameStart(request, pk):
-#     try:
-#         room = Room.objects.get(pk=pk)
-#     except Room.DoesNotExist:
-#         return Response({'message': 'The room does not exist'}, status=status.HTTP_404_NOT_FOUND)
-#     room.start_game()
-#     return Response({'message': 'Game has started'}, status=status.HTTP_200_OK)
-
-
-# @api_view(['PATCH'])
-# def gameReady(request, pk):
-#     try:
-#         room = Room.objects.get(pk=pk)
-#     except Room.DoesNotExist:
-#         return Response({'message': 'The room does not exist'}, status=status.HTTP_404_NOT_FOUND)
-#     username = request.user.username
-#     if not room.user_in_room(username):
-#         return Response({'message': 'User is not in the room'}, status=status.HTTP_400_BAD_REQUEST)
-#     room.get_ready()
-#     return Response({'message': 'someone is ready'}, status=status.HTTP_200_OK)
-
-# User is already in the another room.
-
-# def check_user_in_allroom(username):
-#     rooms = Room.objects.all()
-#     for room in rooms:
-#         if room.user_in_room(username):
-#             True
-#     return False
 
 
 
 # TODO:
 
 
-# 유저 0명일 때 방 삭제되는 이슈
+# 유저 0명일 때 방 삭제되는 이슈(새로고침 시)
 # 소켓 DB 역할 나누기
 
 
